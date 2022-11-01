@@ -4,81 +4,102 @@ from collections import Counter
 import requests
 from pycbrf import ExchangeRates
 
-url = 'https://api.hh.ru/vacancies'
-rate = ExchangeRates()
-
-# Вводим вакансию
-text = input('Введите вакансию : ')
-
-params = {'text': text, 'area': 1}
-
-information = requests.get(url, params=params).json()
-
-pages = information['pages']
-
 # Готовим переменные
 total_vacancies = 0
 salary = [[], []]
 wages = {'from': 0, 'to': 0}
 result = []
 schedule = []
+area = {}
 
-# итоговый вывод сюда
-conclusion = {'keywords': text,
-              'count': 0,
-              'requirements': [],
-              'salary': wages,
-              'schedule': []
-              }
-print('Идёт загрузка', information['found'], 'вакансий в Москве....')
-# Проходим по страницам
-for page in range(pages):
-    # if page > 10:
-    #     break
+url = 'https://api.hh.ru/vacancies'
+rate = ExchangeRates()
 
-    # Поиск только в Москве, для упрощения
-    params = {'text': text, 'area': 1, 'page': page}
+area_code = requests.get('https://api.hh.ru/areas/113').json()
+
+for dict in area_code['areas']:
+    area[dict['name'].lower()] = dict['id']
+    for i in dict['areas']:
+         area[i['name'].lower()] = i['id']
+
+# Вводим вакансию
+text = input('Введите вакансию : ')
+try:
+    area_persons = input('Введите город для поиска: ').lower()
+
+    params = {'text': text, 'area': area[area_persons]}
+
     information = requests.get(url, params=params).json()
-    total_vacancies += len(information['items'])
 
-    for inf in information['items']:
-        # график работы
-        schedule.append(inf['schedule']['name'])
+    pages = information['pages']
 
-        info = requests.get(inf['url']).json()
-        # навыки
-        for skill in info['key_skills']:
-            result.append(skill['name'].lower())
-        # зарплата
-        if info['salary']:
-            code = info['salary']['currency']
-            if rate[code] is None:
-                code = 'RUR'
-            k = 1 if code == 'RUR' else float(rate[code].value)  # С переводом валют, мне не очень понятно
-            if info['salary']['from']:
-                salary[0].append(k * inf['salary']['from'])
 
-            if info['salary']['to']:
-                salary[1].append(k * inf['salary']['to'])
 
-# print(result)
-wages['from'] = (int((sum(salary[0])) / len(salary[0])))
-wages['to'] = (int((sum(salary[1])) / len(salary[1])))
-conclusion['count'] = total_vacancies
+    # итоговый вывод сюда
+    conclusion = {'keywords': text.capitalize(),
+                  'count': 0,
+                  'area': area_persons.capitalize(),
+                  'requirements': [],
+                  'salary': wages,
+                  'schedule': []
+                  }
 
-# pprint.pprint(information['items'])
 
-meter = Counter(result)
-for i in meter.most_common(7):
-    conclusion['requirements'].append(i)
 
-schedule_count = Counter(schedule)
-for i in schedule_count.most_common():
-    conclusion['schedule'].append(i)
+    print('Идёт загрузка', information['found'], 'вакансий в -',area_persons.upper())
+    # Проходим по страницам
+    for page in range(pages):
+        # if page > 10:
+        #     break
 
-pprint.pprint(conclusion)
+        # Поиск только в Москве, для упрощения
+        params = {'text': text, 'area': area[area_persons], 'page': page}
+        information = requests.get(url, params=params).json()
+        total_vacancies += len(information['items'])
 
-# print(information['found'])
-# сохраняем в файл
-with open('conclusion.json', 'w') as f:
-    json.dump(conclusion, f)
+        for inf in information['items']:
+            # график работы
+            schedule.append(inf['schedule']['name'])
+
+            info = requests.get(inf['url']).json()
+            # навыки
+            for skill in info['key_skills']:
+                result.append(skill['name'].lower())
+            # зарплата
+            if info['salary']:
+                code = info['salary']['currency']
+                if rate[code] is None:
+                    code = 'RUR'
+                k = 1 if code == 'RUR' else float(rate[code].value)  # С переводом валют, мне не очень понятно
+                if info['salary']['from']:
+                    salary[0].append(k * inf['salary']['from'])
+
+                if info['salary']['to']:
+                    salary[1].append(k * inf['salary']['to'])
+
+    # print(result)
+    wages['from'] = (int((sum(salary[0])) / len(salary[0])))
+    wages['to'] = (int((sum(salary[1])) / len(salary[1])))
+    conclusion['count'] = total_vacancies
+
+
+
+    # pprint.pprint(information['items'])
+
+    meter = Counter(result)
+    for i in meter.most_common(7):
+        conclusion['requirements'].append(i)
+
+    schedule_count = Counter(schedule)
+    for i in schedule_count.most_common():
+        conclusion['schedule'].append(i)
+
+    pprint.pprint(conclusion)
+
+    # print(information['found'])
+    # сохраняем в файл
+    with open('conclusion.json', 'w') as f:
+        json.dump(conclusion, f)
+
+except KeyError:
+    print('Город не найден')
