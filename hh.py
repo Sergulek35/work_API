@@ -99,3 +99,5 @@ try:
 
 except KeyError:
     print('Город не найден')
+except ZeroDivisionError:
+    print('Выкансий не найдено!')
