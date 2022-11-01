@@ -12,6 +12,7 @@ result = []
 schedule = []
 area = {}
 
+# города
 url = 'https://api.hh.ru/vacancies'
 rate = ExchangeRates()
 
