@@ -3,6 +3,7 @@ import pprint
 from collections import Counter
 import requests
 from pycbrf import ExchangeRates
+import time
 
 # Готовим переменные
 total_vacancies = 0
@@ -50,10 +51,11 @@ try:
         # if page > 10:
         #     break
 
-        # Поиск только в Москве, для упрощения
+
         params = {'text': text, 'area': area[area_persons], 'page': page}
         information = requests.get(url, params=params).json()
         total_vacancies += len(information['items'])
+        time.sleep(0.5)
 
         for inf in information['items']:
             # график работы
