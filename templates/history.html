@@ -29,17 +29,18 @@
                     <ul class="navbar-nav ms-auto py-4 py-lg-0">
 
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="/search/">ПОИСК</a></li>
+
                     </ul>
                 </div>
             </div>
         </nav>
         <!-- Page Header-->
-        <header class="masthead" style="background-image: url('/static/img/about-bg.jpg')">
+        <header class="masthead" style="background-image: url('/static/img/history.jpg')">
             <div class="container position-relative px-4 px-lg-5">
                 <div class="row gx-4 gx-lg-5 justify-content-center">
                     <div class="col-md-10 col-lg-8 col-xl-7">
                         <div class="page-heading">
-                            <h1>Результаты</h1>
+                            <h1>История</h1>
 
 
 
@@ -54,65 +55,21 @@
                 <div class="row gx-4 gx-lg-5 justify-content-center">
                     <div class="col-md-10 col-lg-8 col-xl-7">
                                <p id="summary">
+                                {{history_no}}
 
 
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th scope="col"></th>
-      <th scope="col"></th>
-      <th scope="col">Кол-во</th>
 
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>Город</th>
-      <td colspan="2">{{area}}</td>
+                                   {{history}}
 
 
-    </tr>
-    <tr>
-      <th>Вакансия</th>
-      <td>{{keywords}}</td>
-      <td>{{count}} шт.</td>
+                    {%if history%}
 
-    </tr>
-    <tr>
-      <th rowspan="5" >Требования</th>
-        {%for i in requirements%}
-       <td>{{i[0]}}</td>
-      <td>{{i[1]}}</td>
-    </tr>
-        {%endfor%}
-
-    <tr>
-      <th rowspan="2" >Зарплата</th>
-
-          <td>от</td>
-          <td>{{salary.from}} р.</td>
-     </tr>
-     <tr>
-          <td>до</td>
-          <td>{{salary.to}} р.</td>
-    </tr>
-    <tr>
-      <th rowspan="4" >График</th>
-        {%for i in schedule%}
-      <td>{{i[0]}}</td>
-      <td>{{i[1]}}</td>
-    </tr>
-    {%endfor%}
-
-  </tbody>
-</table>
-                        <form action="/results/" method="post" >
+                         <form action="/history/" method="post" >
 
 
-                 <h4><input type="submit" name = "save" value="Сохранить результаты ">    <a class="navbar-brand" href="/">Главная</a></h4>
-
-
-                        </form>
+                         <h4><input type="submit" name = "clear" value="Очистить историю "></h4>
+                    </form>
+                    {%endif%}
                 </div>
             </div>
             </div>

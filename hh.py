@@ -1,43 +1,39 @@
-import json
 import pprint
 from collections import Counter
 import requests
 from pycbrf import ExchangeRates
 import time
-
-# Готовим переменные
-total_vacancies = 0
-salary = [[], []]
-wages = {'from': 0, 'to': 0}
-result = []
-schedule = []
-area = {}
-
-# поиск городов
-url = 'https://api.hh.ru/vacancies'
-rate = ExchangeRates()
+from time import monotonic
 
 area_code = requests.get('https://api.hh.ru/areas/113').json()
+area = {}
 
 for dict in area_code['areas']:
     area[dict['name'].lower()] = dict['id']
     for i in dict['areas']:
         area[i['name'].lower()] = i['id']
 
-# Вводим вакансию
-text = input('Введите вакансию : ')
-# вводим город
-try:
-    area_persons = input('Введите город для поиска: ').lower()
 
-    params = {'text': text, 'area': area[area_persons]}
+def hh_parce(vykansiya, area_persons, time_persons):
+    # Готовим переменные
+    total_vacancies = 0
+    salary = [[], []]
+    wages = {'from': 0, 'to': 0}
+    result = []
+    schedule = []
+
+    # поиск городов
+    url = 'https://api.hh.ru/vacancies'
+    rate = ExchangeRates()
+
+    params = {'text': vykansiya, 'area': area[area_persons]}
 
     information = requests.get(url, params=params).json()
 
     pages = information['pages']
 
     # итоговый вывод сюда
-    conclusion = {'keywords': text.capitalize(),
+    conclusion = {'keywords': vykansiya.capitalize(),
                   'count': 0,
                   'area': area_persons.capitalize(),
                   'requirements': [],
@@ -45,17 +41,18 @@ try:
                   'schedule': []
                   }
 
-    print('Идёт загрузка', information['found'], 'вакансий в -', area_persons.upper())
-    # Проходим по страницам
+    t = monotonic()
     for page in range(pages):
-        # if page > 10:
+
+        if monotonic() - t > time_persons:  # Если загрузка больше введенных секунд
+            break
+        # if page > 5:
         #     break
 
-
-        params = {'text': text, 'area': area[area_persons], 'page': page}
+        params = {'text': vykansiya, 'area': area[area_persons], 'page': page}
         information = requests.get(url, params=params).json()
         total_vacancies += len(information['items'])
-        time.sleep(0.5)
+        time.sleep(0.3)
 
         for inf in information['items']:
             # график работы
@@ -85,21 +82,26 @@ try:
     # pprint.pprint(information['items'])
 
     meter = Counter(result)
-    for i in meter.most_common(7):
+    for i in meter.most_common(5):
         conclusion['requirements'].append(i)
 
     schedule_count = Counter(schedule)
-    for i in schedule_count.most_common():
+    for i in schedule_count.most_common(4):
         conclusion['schedule'].append(i)
 
-    pprint.pprint(conclusion)
+    return conclusion
 
-    # print(information['found'])
-    # сохраняем в файл
-    with open('conclusion.json', 'w') as f:
-        json.dump(conclusion, f)
 
-except KeyError:
-    print('Город не найден')
-except ZeroDivisionError:
-    print('Выкансий не найдено!')
+if __name__ == '__main__':
+    try:
+        vykansiya = input('Введите вакансию : ')
+        area_persons = input('Введите город для поиска: ').lower()
+        time_persons = int(input('Введите максимальное время для загрузки в секундах: '))
+        pprint.pprint(hh_parce(vykansiya, area_persons, time_persons))
+
+    except ZeroDivisionError:
+        print('Вакансий не найдено')
+    except KeyError:
+        print('Город не найден')
+    except ValueError:
+        print('Нужно ввести кол-во секунд!')
