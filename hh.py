@@ -4,6 +4,8 @@ import requests
 from pycbrf import ExchangeRates
 import time
 from time import monotonic
+import json
+
 
 area_code = requests.get('https://api.hh.ru/areas/113').json()
 area = {}
@@ -88,6 +90,10 @@ def hh_parce(vykansiya, area_persons, time_persons):
     schedule_count = Counter(schedule)
     for i in schedule_count.most_common(4):
         conclusion['schedule'].append(i)
+
+    with open('conclusion.json', 'w') as f:
+        json.dump(conclusion, f)
+
 
     return conclusion
 
