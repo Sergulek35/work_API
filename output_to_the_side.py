@@ -1,9 +1,6 @@
 from flask import Flask, render_template, request
 from hh import area, hh_parce
-import os
 from download_functions import add_history, show_history, dell_history
-import sqlite3
-import json
 
 print_area = sorted(area.keys())
 app = Flask(__name__)
