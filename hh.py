@@ -58,7 +58,8 @@ def hh_parce(vykansiya, area_persons, time_persons):
 
         for inf in information['items']:
             # график работы
-            schedule.append(inf['schedule']['name'])
+            if schedule:
+                schedule.append(inf['schedule']['name'])
 
             info = requests.get(inf['url']).json()
             # навыки
